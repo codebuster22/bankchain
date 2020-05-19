@@ -1,7 +1,5 @@
 import React, {Component} from "react";
-import Table from "react-bootstrap/Table";
 
-//Accepts array of NPA Structure
 export class Portal extends Component {
 
     constructor(props) {
@@ -26,7 +24,7 @@ export class Portal extends Component {
             if(!(await this.getStatus())) {
                 await this.startBidding();
             }
-            await this.getMyBid();    //haven't tested this function
+            await this.getMybid();    //haven't tested this function
             this.listenToStart();
             this.listenToBid()
             this.listenToBidWithdraw()
@@ -42,7 +40,7 @@ export class Portal extends Component {
     }
 
     // haven't tested yet
-    getMyBid =async () =>{
+    getMybid =async () =>{
         const response = await this.props.auctionInterface.methods.getMyBid().call();
         this.setState({
             myBid:response,
@@ -58,7 +56,7 @@ export class Portal extends Component {
     }
 
     sendBid = () => {
-        this.props.auctionInterface.methods.bid().send({from: this.loggedInAccount[0], value: this.props.web3.utils.toWei(this.state.bidAmount,"finney")},(err,res)=>console.log(err,res)).then(res=>this.getMyBid());  // haven't tested the last .then part
+        this.props.auctionInterface.methods.bid().send({from: this.loggedInAccount[0], value: this.props.web3.utils.toWei(this.state.bidAmount,"finney")},(err,res)=>console.log(err,res)).then(res=>this.getMybid());  // haven't tested the last .then part
         this.setState({bidAmount:0})
     }
 
@@ -96,7 +94,8 @@ export class Portal extends Component {
     //  HighBidAlert(uint _bid, address _bidder);
     listenToBid = () =>{
         const data=this.state.bidLog;
-        this.props.auctionInterface.events.HighBidAlert().on("data",this.getHighestBid).on("data",(evt)=>{
+        this.props.auctionInterface.events.HighBidAlert().on("data",this.getHighestBid).on("data",async (evt)=>{
+            await this.getMybid();
             console.log(evt);
             if(data.length){
                 // console.log(data.toString().includes([evt.returnValues._bid,evt.returnValues._bidder].toString()))

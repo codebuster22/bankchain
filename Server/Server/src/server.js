@@ -13,7 +13,7 @@ const webScraper = require('./support/webScraper.js');
 const init = require('./support/initialiseDatabase.js');
 
 const provider = new Web3.providers.HttpProvider(
-    "http://127.0.0.1:7545"
+    "https://rinkeby.infura.io/v3/d29e6e8389ba4119ac071627843b1521"
 );
 
 const app = express();
@@ -43,7 +43,7 @@ app.post('/fetchData',(req,res)=>{
     npa.fetchData(contractState)(address).then(npa=>res.json(npa));
 })
 
-app.listen(3001,()=>{
+app.listen(process.env.PORT || 3001,async ()=>{
     mountEthereum(Web3,provider,AssetManagerContract,AssetInterfaceContract,AuctionManagerContract)().then(async res=>{
         Object.assign(contractState,res);
         let flag = false;
@@ -57,7 +57,15 @@ app.listen(3001,()=>{
                 }
             });
         }while(flag===false)
-    }).then(res=>init.initialiseDb(webScraper, npa, npaAddress, fetch, process.env.API_TOKEN, counter, contractState)())
+    }).then(res=> {
+        init.initialiseDb(webScraper, npa, npaAddress, fetch, process.env.API_TOKEN, counter, contractState)();
+        setInterval(()=>
+            {
+                init.initialiseDb(webScraper, npa, npaAddress, fetch, process.env.API_TOKEN, counter, contractState)();
+            }
+            ,86400000);
+        }
+    )
 
-    console.log("Server listening to port 3001");
+    console.log(`Server listening to port ${process.env.PORT}`);
 });
